@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>لوحة التحكم المنظمة | دراما NETFLIX</title>
+    <style>
+        :root {
+            --bg-main: #0a051b; --bg-panel: #140d2b; --primary: #8a2be2; --primary-hover: #731cc7;
+            --accent: #d8b4fe; --text-main: #ffffff; --text-secondary: #a7a2bd; --danger: #ef4444;
+            --border: rgba(138, 43, 226, 0.2); --gold: #ffd700; --success: #10b981;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; -webkit-tap-highlight-color: transparent; user-select: none; }
+        body { background-color: var(--bg-main); color: var(--text-main); padding: 20px 15px; min-height: 100vh; display: flex; align-items: center; justify-content: center; } 
+        
+        .auth-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(10, 5, 27, 0.95); backdrop-filter: blur(8px); z-index: 999; display: flex; align-items: center; justify-content: center; padding: 20px; transition: opacity 0.4s ease; }
+        .auth-box { background: var(--bg-panel); border: 1px solid var(--border); padding: 30px 25px; border-radius: 24px; width: 100%; max-width: 400px; text-align: center; box-shadow: 0 20px 50px rgba(138, 43, 226, 0.15); }
+        .auth-box h3 { font-size: 19px; margin-bottom: 10px; color: #ffffff; }
+        .auth-box p { font-size: 13px; color: var(--text-secondary); margin-bottom: 20px; }
+        .auth-box svg { width: 45px; height: 45px; fill: var(--primary); margin-bottom: 15px; filter: drop-shadow(0 0 10px var(--primary)); }
+        
+        .panel-container { width: 100%; max-width: 650px; margin: auto; background: var(--bg-panel); padding: 25px; border-radius: 24px; box-shadow: 0 20px 40px rgba(0,0,0,0.5); border: 1px solid var(--border); display: none; }
+        .header-panel { text-align: center; margin-bottom: 25px; }
+        .back-link { display: inline-flex; align-items: center; gap: 8px; color: var(--accent); text-decoration: none; font-size: 13px; margin-bottom: 15px; transition: 0.2s; padding: 6px 14px; background: rgba(138, 43, 226, 0.1); border-radius: 50px; }
+        .back-link:active { color: white; background: var(--primary); }
+        .back-link svg { width: 14px; height: 14px; fill: currentColor; }
+        
+        h1 { font-size: 24px; color: #ffffff; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 10px; }
+        h1 span { color: var(--primary); filter: drop-shadow(0 0 8px var(--primary)); }
+        h2 { font-size: 16px; margin: 25px 0 15px 0; padding-bottom: 8px; border-bottom: 1px solid var(--border); color: var(--accent); display: flex; align-items: center; gap: 8px; }
+        h2 svg { width: 18px; height: 18px; fill: currentColor; }
+        
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .form-group { margin-bottom: 15px; }
+        .form-group.full-width { grid-column: span 2; }
+        
+        label { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; font-size: 13px; color: var(--text-secondary); font-weight: 600; }
+        label svg { width: 14px; height: 14px; fill: rgba(255,255,255,0.4); }
+        
+        input, select, textarea { width: 100%; padding: 12px 14px; background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 12px; color: white; outline: none; transition: 0.2s; font-size: 13px; }
+        input:focus, select:focus, textarea:focus { border-color: var(--primary); box-shadow: 0 0 10px rgba(138, 43, 226, 0.2); background: rgba(255,255,255,0.06); }
+        textarea { resize: none; height: 80px; }
+        
+        button { width: 100%; padding: 12px; background: linear-gradient(135deg, var(--primary), #6366f1); border: none; border-radius: 12px; color: white; font-weight: bold; cursor: pointer; font-size: 14px; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 15px rgba(138, 43, 226, 0.2); margin-top: 10px; }
+        button:active { transform: scale(0.97); }
+        button svg { width: 16px; height: 16px; fill: currentColor; }
+        
+        .section-box { background: rgba(255, 255, 255, 0.02); padding: 15px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.05); margin-bottom: 15px; }
+        .inline-group { display: flex; gap: 10px; }
+        .inline-group input { flex: 1; }
+        .inline-group button { width: auto; padding: 12px 20px; margin-top: 0; background: linear-gradient(135deg, var(--success), #059669); }
+        
+        .danger-btn { background: linear-gradient(135deg, var(--danger), #b91c1c); box-shadow: 0 4px 15px rgba(239, 68, 68, 0.2); margin-top: 25px; }
+    </style>
+</head>
+<body>
+
+    <!-- صندوق التحقق من الرمز السري الفاخر -->
+    <div class="auth-overlay" id="authOverlay">
+        <div class="auth-box">
+            <svg viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
+            <h3>بوابة حماية المنصة</h3>
+            <p>الرجاء كتابة رمز الإدارة السري للوصول</p>
+            <div class="form-group"><input type="password" id="passwordInput" placeholder="أدخل رمز المرور السري..." style="text-align: center; font-size: 16px; letter-spacing: 3px;"></div>
+            <button onclick="checkAuth()">تأكيد الصلاحية والدخول</button>
+        </div>
+    </div>
+
+    <div class="panel-container" id="panelContainer">
+        <div class="header-panel">
+            <a href="index.html" class="back-link"><svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg> الخروج والعودة للمنصة الرئيسية</a>
+            <h1>لوحة تحكم <span>دراما NETFLIX</span></h1>
+        </div>
+
+        <!-- 🛠️ الإضافة الجديدة: صندوق إدارة واختراع أقسام فرعية ديناميكية بسهولة -->
+        <h2><svg viewBox="0 0 24 24"><path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg> إدارة وتوليد الأقسام الفورية</h2>
+        <div class="section-box">
+            <label>إضافة قسم جديد لـ (القائمة الجانبية + لائحة النشر):</label>
+            <div class="inline-group">
+                <input type="text" id="newCategoryName" placeholder="اكتب اسم القسم بالعربية (مثال: مسلسلات أنمي)">
+                <button onclick="createNewCategory()"><svg viewBox="0 0 24 24" style="width:14px;height:14px;margin:0;"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg> إضافة الآن</button>
+            </div>
+        </div>
+        
+        <h2><svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg> إضافة محتوى حاصد ومنظم (أفلام / مسلسلات)</h2>
+        
+        <div class="form-row">
+            <div class="form-group">
+                <label>اسم العرض المكتوب:</label>
+                <input type="text" id="movieTitle" placeholder="مثال: الحبار - الموسم الثاني">
+            </div>
+            <div class="form-group">
+                <label>تصنيف القسم الجانبي:</label>
+                <!-- يتم تغذية الأقسام ديناميكياً لتسهيل العمل -->
+                <select id="movieCategory">
+                    <option value="movies">الأفلام العالمية</option>
+                    <option value="series">المسلسلات الحصرية</option>
+                    <option value="arabic">مسلسلات عربية</option>
+                    <option value="turkish">مسلسلات تركية</option>
+                    <option value="korean">مسلسلات كورية</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>سنة الإنتاج والإصدار:</label>
+                <input type="number" id="movieYear" value="2026">
+            </div>
+            <div class="form-group">
+                <label>تقييم النجوم (من 10):</label>
+                <input type="text" id="movieRating" value="8.9">
+            </div>
+
+            <div class="form-group">
+                <label>نوع نظام العرض:</label>
+                <select id="movieType" onchange="toggleVipFields()">
+                    <option value="free">مجاني للجميع (FREE)</option>
+                    <option value="vip">🔐 مدفوع باشتراك (VIP)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>الرمز السري لفتح الفيلم للمشترك:</label>
+                <input type="text" id="movieKey" placeholder="مثال: vip55" disabled style="border-color: var(--text-secondary); opacity: 0.5;">
+            </div>
+
+            <div class="form-group full-width">
+                <label>رابط غلاف الصورة / البوستر (URL):</label>
+                <input type="text" id="movieImg" placeholder="أدخل رابط صورة البوستر المباشر">
+            </div>
+            <div class="form-group full-width">
+                <label>رابط فيديو العرض (MP4 URL / Embed):</label>
+                <input type="text" id="movieUrl" placeholder="أدخل رابط سيرفر المشاهدة أو البث">
+            </div>
+            <div class="form-group full-width">
+                <label>وصف وقصة العرض:</label>
+                <textarea id="movieDesc" placeholder="اكتب هنا ملخص بسيط ومثير عن قصة الفيلم أو المسلسل..."></textarea>
+            </div>
+        </div>
+        
+        <button onclick="addMovie()"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg> تثبيت ونشر المادة الآن</button>
+
+        <h2><svg viewBox="0 0 24 24"><path d="M23 7a2 2 0 0 0-2.45-1.45L11 8.35l-7.55-2.8A2 2 0 0 0 1 7.45V19a2 2 0 0 0 2.45 1.45L13 17.65l7.55 2.8A2 2 0 0 0 23 18.55V7Z"/></svg> نشر مقطع شورتس جديد</h2>
+        <div class="form-group"><label>عنوان لقطة الشورتس:</label><input type="text" id="shortTitle" placeholder="مثال: لقطة حماسية ومثيرة"></div>
+        <div class="form-group"><label>رابط فيديو الشورتس المباشر:</label><input type="text" id="shortUrl" placeholder="أدخل رابط فيديو MP4 المباشر الرأسي"></div>
+        <button onclick="addShort()">رفع ونشر الشورتس</button>
+        
+        <h2><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 12 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg> إدارة تهيئة النظام</h2>
+        <button onclick="clearAllData()" class="danger-btn">حذف وإعادة تصفير كافة المحتويات المخزنة</button>
+    </div>
+
+    <script>
+        const SECRET_PASSWORD = "1234";
+        function checkAuth() {
+            const input = document.getElementById('passwordInput').value;
+            if (input === SECRET_PASSWORD) {
+                document.getElementById('authOverlay').style.opacity = '0';
+                setTimeout(() => {
+                    document.getElementById('authOverlay').style.display = 'none';
+                    document.getElementById('panelContainer').style.display = 'block';
+                    loadCustomCategories(); // تحميل الأقسام فور فتح اللوحة
+                }, 400);
+            } else { alert('الرمز السري خطأ!'); document.getElementById('passwordInput').value = ''; }
+        }
+
+        // 🛠️ دالة توليد وحفظ الأقسام المبتكرة في النظام تلقائياً
+        function createNewCategory() {
+            const catName = document.getElementById('newCategoryName').value.trim();
+            if (!catName) { alert('الرجاء كتابة اسم القسم أولاً!'); return; }
+            
+            // توليد رمز إلكتروني للقسم مشتق من الاسم
+            const catId = "custom_" + Date.now();
+            
+            const customCategories = JSON.parse(localStorage.getItem('customCategories')) || [];
+            customCategories.push({ id: catId, name: catName });
+            localStorage.setItem('customCategories', JSON.stringify(customCategories));
+            
+            alert(` تم إنشاء وتثبيت قسم "${catName}" بنجاح في المنصة!`);
+            document.getElementById('newCategoryName').value = '';
+            loadCustomCategories();
+        }
+
+        // دالة تحديث قائمة خيارات الاختيار عند نشر الأفلام
+        function loadCustomCategories() {
+            const select = document.getElementById('movieCategory');
+            const customCategories = JSON.parse(localStorage.getItem('customCategories')) || [];
+            
+            // إعادة ضبط الخيارات الدائمة الأساسية منعاً للتكرار
+            select.innerHTML = `
+                <option value="movies">الأفلام العالمية</option>
+                <option value="series">المسلسلات الحصرية</option>
+                <option value="arabic">مسلسلات عربية</option>
+                <option value="turkish">مسلسلات تركية</option>
+                <option value="korean">مسلسلات كورية</option>
+            `;
+            
+            // حقن الأقسام الجديدة التي صنعتها بنفسك
+            customCategories.forEach(cat => {
+                select.innerHTML += `<option value="${cat.id}">${cat.name}</option>`;
+            });
+        }
+
+        function toggleVipFields() {
+            const type = document.getElementById('movieType').value;
+            const keyInput = document.getElementById('movieKey');
+            if(type === 'vip') {
+                keyInput.disabled = false; keyInput.style.opacity = '1'; keyInput.style.borderColor = 'var(--gold)';
+            } else {
+                keyInput.disabled = true; keyInput.style.opacity = '0.5'; keyInput.style.borderColor = 'var(--border)'; keyInput.value = '';
+            }
+        }
+
+        function addMovie() {
+            const title = document.getElementById('movieTitle').value;
+            const category = document.getElementById('movieCategory').value;
+            const year = document.getElementById('movieYear').value;
+            const rating = document.getElementById('movieRating').value;
+            const type = document.getElementById('movieType').value;
+            const key = document.getElementById('movieKey').value;
+            const img = document.getElementById('movieImg').value;
+            const url = document.getElementById('movieUrl').value;
+            const desc = document.getElementById('movieDesc').value;
+
+            if(!title || !img || !url) { alert('الرجاء تعبئة الحقول الأساسية المطلوبة للفيلم!'); return; }
+            if(type === 'vip' && !key) { alert('الرجاء كتابة رمز تفعيل قفل الفيلم الـ VIP للمشتركين!'); return; }
+
+            const movies = JSON.parse(localStorage.getItem('movies')) || [];
+            movies.push({ title, category, year, rating, type, key, img, url, desc });
+            localStorage.setItem('movies', JSON.stringify(movies));
+
+            alert('🚀 تم نشر العمل بنجاح داخل منصة دراما نتفلكس!');
+            ['movieTitle', 'movieImg', 'movieUrl', 'movieDesc', 'movieKey'].forEach(id => document.getElementById(id).value = '');
+        }
+
+        function addShort() {
+            const title = document.getElementById('shortTitle').value;
+            const url = document.getElementById('shortUrl').value;
+            if(!title || !url) { alert('برجاء تعبئة تفاصيل الشورتس كاملاً!'); return; }
+            const shorts = JSON.parse(localStorage.getItem('shorts')) || [];
+            shorts.push({ title, url });
+            localStorage.setItem('shorts', JSON.stringify(shorts));
+            alert('⚡ تم رفع مقطع الشورتس بنجاح!');
+            document.getElementById('shortTitle').value = ''; document.getElementById('shortUrl').value = '';
+        }
+
+        function clearAllData() { if(confirm('🚨 تحذير: سيتم حذف كافة العروض والأقسام التي قمت بصنعها؟')) { localStorage.clear(); alert('تم مسح وإعادة تعيين النظام بنجاح.'); loadCustomCategories(); } }
+    </script>
+</body>
+</html>
